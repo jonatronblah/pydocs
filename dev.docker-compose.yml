@@ -1,0 +1,47 @@
+services:
+  app:
+    container_name: app-dev
+    build:
+      context: .
+    working_dir: /app/src
+    command: granian --reload --interface asgi main:app --host 0.0.0.0 --port 5000
+    volumes:
+      - ./src:/app/src
+    ports:
+      - 5000:5000
+    env_file:
+      - .env
+
+  redis:
+    container_name: redis
+    hostname: redis
+    image: redis:latest
+    # restart: always
+    ports:
+      - 6379:6379
+
+  postgres:
+    image: pgvector/pgvector:pg18-trixie
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql
+    env_file:
+      - .env
+    ports:
+      - 5432:5432
+
+  pgadmin:
+    profiles: [pgadmin]
+    container_name: pgadmin
+    hostname: pgadmin
+    image: dpage/pgadmin4:latest
+    volumes:
+      - ./pgAdminServers.json:/pgadmin4/servers.json
+    env_file:
+      - .env
+    ports:
+      - 6960:6960
+
+volumes:
+  postgres_data:
+    name: postgres_data

@@ -1,0 +1,42 @@
+Models (src/pydocs/models/document.py)
+Enums
+DocumentType: TEXT, PDF, MARKDOWN, HTML
+DocumentStatus: DRAFT, PUBLISHED, ARCHIVED
+Core Models
+Author: Document author with name, email, bio, and many-to-many relationship to documents
+Tag: Document categorization with name, description, color (hex code)
+Document: Base document model using single-table inheritance with:
+File metadata (path, name, size, mime_type, checksum)
+Status tracking, visibility (is_public), download count
+Owner relationship (ForeignKey to User)
+Many-to-many relationships to authors and tags
+One-to-many relationship to versions
+Document Subtypes
+TextDocument: Inherits from Document with text-specific attributes (encoding, line/word/character counts, language, content preview)
+PDFDocument: Inherits from Document with PDF-specific attributes (page count, PDF version, encryption status, searchability, extracted PDF metadata)
+Version Control
+DocumentVersion: Tracks document versions with file info, change summary, and creator reference
+API Endpoints (src/pydocs/schema/file.py)
+Endpoint	Method	Description
+/files/upload	POST	Upload new document with automatic type detection
+/files/	GET	List documents with pagination and filtering
+/files/{id}	GET	Get document details
+/files/{id}	PATCH	Update document metadata
+/files/{id}	DELETE	Delete document and file
+/files/{id}/version	POST	Upload new version of existing document
+Best Practices Applied
+Streaming uploads with size limit checking during upload (prevents memory exhaustion)
+SHA-256 checksums computed during upload for integrity verification
+File validation (extension and MIME type checks)
+Organized storage structure: uploads/{owner_id}/{year}/{month}/{uuid}.ext
+Proper error handling with cleanup on failure
+Authentication required via current_active_user dependency
+Access control (owner-only access for non-public documents)
+Pydantic response models for type-safe API responses
+Configuration (src/pydocs/config.py)
+Added upload settings:
+UPLOAD_DIR: Storage location
+MAX_UPLOAD_SIZE: 50MB default limit
+ALLOWED_EXTENSIONS: .txt, .pdf, .md, .html, .htm
+ALLOWED_MIME_TYPES: Corresponding MIME types
+Note: For full PDF metadata extraction, you'll want to add PyPDF2 or pdfplumber to your dependencies and implement the actual PDF parsing in extract_pdf_metadata(). The placeholder is ready to be extended.
