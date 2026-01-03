@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import os
 import uuid
@@ -25,6 +26,7 @@ from pydocs.models import (
     Tag,
     Author,
 )
+from pydocs.workflows import trigger_document_tagging
 
 router = APIRouter(prefix="/files", tags=["files"])
 
@@ -352,9 +354,13 @@ async def upload_document(
             "owner_id": current_user.id,
         }
 
+        # Initialize variables for content preview
+        content_preview = None
+
         if doc_type == DocumentType.PDF:
             # Extract PDF-specific metadata
             pdf_metadata = await extract_pdf_metadata(file_path)
+            content_preview = pdf_metadata.get("text_preview")
             document = PDFDocument(
                 **common_attrs,
                 **pdf_metadata,
@@ -362,6 +368,7 @@ async def upload_document(
         else:
             # Text-based document (TEXT, MARKDOWN, HTML)
             text_metadata = await extract_text_metadata(file_path)
+            content_preview = text_metadata.get("content_preview")
             document = TextDocument(
                 **common_attrs,
                 **text_metadata,
@@ -370,6 +377,16 @@ async def upload_document(
         db.add(document)
         await db.commit()
         await db.refresh(document)
+
+        # Trigger document tagging workflow asynchronously
+        # We don't await this as it should run in the background
+        asyncio.create_task(
+            trigger_document_tagging(
+                document_id=document.id,
+                document_title=document.title,
+                document_content=content_preview,
+            )
+        )
 
         return DocumentUploadResponse(
             id=document.id,

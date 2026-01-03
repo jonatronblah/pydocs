@@ -22,7 +22,9 @@ class BaseConfig:
 
     # File upload configuration
     UPLOAD_DIR: pathlib.Path = BASE_DIR / "uploads"
-    MAX_UPLOAD_SIZE: int = int(os.environ.get("MAX_UPLOAD_SIZE", 50 * 1024 * 1024))  # 50MB default
+    MAX_UPLOAD_SIZE: int = int(
+        os.environ.get("MAX_UPLOAD_SIZE", 50 * 1024 * 1024)
+    )  # 50MB default
     ALLOWED_EXTENSIONS: set = {".txt", ".pdf", ".md", ".html", ".htm"}
     ALLOWED_MIME_TYPES: set = {
         "text/plain",
@@ -31,6 +33,12 @@ class BaseConfig:
         "text/html",
         "application/octet-stream",
     }
+
+    # llm config
+    OPENROUTER_API_KEY: str = os.environ.get("OPENROUTER_API_KEY", "")
+    HF_TOKEN: str = os.environ.get("HF_TOKEN", "")
+    MODEL: str = os.environ.get("MODEL", "")
+    HF_MODEL: str = os.environ.get("HF_MODEL", "")
 
 
 class DevelopmentConfig(BaseConfig):
